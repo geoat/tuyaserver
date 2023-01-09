@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/geoat/tuyaserver/issues"
   },
-  "homepage": "https://github.com/geoat/tuyaserver#readme"
+  "homepage": "https://github.com/geoat/tuyaserver#readme",
+  "dependencies": {
+    "tuyapi": "github:codetheweb/tuyapi"
+  }
 }
