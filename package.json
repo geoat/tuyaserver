@@ -1,0 +1,19 @@
+{
+  "name": "tuyaserver",
+  "version": "1.0.0",
+  "description": "Server for controling Tuya devices in home",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/geoat/tuyaserver.git"
+  },
+  "author": "Arun Geo Thoomas <arungeothomas@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/geoat/tuyaserver/issues"
+  },
+  "homepage": "https://github.com/geoat/tuyaserver#readme"
+}
