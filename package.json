@@ -4,9 +4,6 @@
   "description": "Server for controling Tuya devices in home",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
-  },
-  "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -20,6 +17,10 @@
   },
   "homepage": "https://github.com/geoat/tuyaserver#readme",
   "dependencies": {
-    "tuyapi": "github:codetheweb/tuyapi"
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "path": "^0.12.7",
+    "tuyapi": "github:codetheweb/tuyapi",
+    "url": "^0.11.0"
   }
 }
