@@ -77,7 +77,7 @@ class DeviceEndPoint {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
     if (DeviceEndPoint.devices.delete(deviceUniqueKey)) {
       console.log(`Device found and deleted`);
-
+      res.sendStatus(200);
     } else {
       console.log(`Device not found`);
       res.sendStatus(404);
