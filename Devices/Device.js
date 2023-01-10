@@ -84,7 +84,7 @@ class TuyaDevice extends Device {
 
     this.#device.on('data', data => {
       console.log('Data from device:', data);
-      currentState = data.dps['1'];
+      const currentState = data.dps['1'];
       console.log(`Boolean status of default property: ${currentState}.`);
       if (currentState) {
         this.state = DeviceState.ON;
