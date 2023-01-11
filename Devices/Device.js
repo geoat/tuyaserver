@@ -48,19 +48,20 @@ class Device {
 class TuyaDevice extends Device {
   #device = undefined;
   connect() {
+    this.requestedConnectionState = DeviceConnectionState.CONNECTED;
+
+    if (this.connectionState !== DeviceConnectionState.DISCONNECTED) {
+      console.log(`Device is already connected or connection in progress`);
+      return;
+    }
+
     if (this.#device === undefined){
       this.#device = new TuyAPI({
         id: `${this.deviceId}`,
         key: `${this.deviceKey}`
       });
     };
-
-    this.requestedConnectionState = DeviceConnectionState.CONNECTED;
     
-    if (this.connectionState !== DeviceConnectionState.DISCONNECTED) {
-      console.log(`Device is already connected or connection in progress`);
-      return;
-    }
     this.connectionState = DeviceConnectionState.INPROGRESS;
 
     // Find device on network
@@ -144,7 +145,11 @@ class TuyaDevice extends Device {
   }
 
   disconnect() {
-    this.requestedConnectionState = DeviceConnectionState.DISCONNECTED; 
+    this.requestedConnectionState = DeviceConnectionState.DISCONNECTED;
+    if (this.connectionState === DeviceConnectionState.DISCONNECTED) {
+      console.log(`Already disconnected`);
+      return
+    }
      new Promise(() => {       
        if (this.connectionState !== DeviceConnectionState.DISCONNECTED) {
          console.log(`Disconnecting`);

@@ -1,7 +1,6 @@
 const express = require('express');
 
 const DeviceService = require('../Services/DeviceService');
-const {DeviceConnectionState, DeviceState, Device, TuyaDevice} = require('../Devices/Device');
 
 class DeviceEndPoint {
   static ROOT_PATH = '/api/device';
