@@ -1,11 +1,11 @@
 const express = require('express');
 
+const DeviceService = require('../Services/DeviceService');
 const {DeviceConnectionState, DeviceState, Device, TuyaDevice} = require('../Devices/Device');
 
 class DeviceEndPoint {
   static ROOT_PATH = '/api/device';
-  static devices = new Map();
-
+  deviceService = DeviceService.getService();
   constructor(app) {
     const router = express.Router();
 
@@ -36,28 +36,28 @@ class DeviceEndPoint {
     const deviceId = req.query.deviceId;
     const deviceKey = req.query.deviceKey;
     console.log(`Request for adding ${deviceType} device with id: ${deviceId}`, );
-    if (DeviceEndPoint.devices.has(Device.getUniqueKey(deviceType, deviceId))) {
+    if (this.deviceService.hasDevice(deviceType, deviceId)) {
       res.sendStatus(409)
       return;
     }
+    //further clean-up required
     switch (deviceType) {
       case 'tuya':
-        const device = new TuyaDevice(deviceName, deviceType, deviceId, deviceKey);
-        DeviceEndPoint.devices.set(device.getUniqueKey(), device); 
-        console.log(`Device added`);       
-      break;
+        this.deviceService.addTuyaDevice(deviceName, deviceType, deviceId, deviceKey);
+        console.log(`Device added`);
+        res.sendStatus(200)
+        break;
       default:
         console.log(`Device type not known`);
+        res.sendStatus(403);
     }
-    res.send("added");
   }
 
   getDevice(req, res) {
     const deviceType = req.query.deviceType;
     const deviceId = req.query.deviceId;
     console.log(`Getting ${deviceType} device with id: ${deviceId}`);
-    const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
-    const deviceFound = DeviceEndPoint.devices.get(deviceUniqueKey);
+    const deviceFound = this.deviceService.getDevice(deviceType, deviceId);
     if (deviceFound !== undefined) {
       console.log(`Device found`);
       res.json(deviceFound);
@@ -67,15 +67,14 @@ class DeviceEndPoint {
   }
 
   getAllDevices(req, res) {
-    res.json([...DeviceEndPoint.devices.values()]);
+    res.json([...this.deviceService.getAllDevices()]);
   }
 
   deleteDevice(req, res) {
     const deviceType = req.query.deviceType;
     const deviceId = req.query.deviceId;
     console.log(`Delete ${deviceType} device with id: ${deviceId}`);
-    const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
-    if (DeviceEndPoint.devices.delete(deviceUniqueKey)) {
+    if (this.deviceService.deleteDevice(deviceType, deviceId)) {
       console.log(`Device found and deleted`);
       res.sendStatus(200);
     } else {
@@ -88,13 +87,10 @@ class DeviceEndPoint {
     const deviceType = req.query.deviceType;
     const deviceId = req.query.deviceId;
     console.log(`Connect ${deviceType} device with id: ${deviceId}`);
-    const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
-    const deviceFound = DeviceEndPoint.devices.get(deviceUniqueKey);
-    if (deviceFound !== undefined) {
+    if (this.deviceService.hasDevice(deviceType, deviceId)) {
       console.log(`Device found`);
-      console.log(`Connecting device`)
       try {
-        deviceFound.connect();
+        this.deviceService.connectDevice(deviceType, deviceId);
         res.sendStatus(200);
       } catch (error) {
         console.log(error);
@@ -109,13 +105,10 @@ class DeviceEndPoint {
     const deviceType = req.query.deviceType;
     const deviceId = req.query.deviceId;
     console.log(`Disconnect ${deviceType} device with id: ${deviceId}`);
-    const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
-    const deviceFound = DeviceEndPoint.devices.get(deviceUniqueKey);
-    if (deviceFound !== undefined) {
+    if (this.deviceService.hasDevice(deviceType, deviceId)) {
       console.log(`Device found`);
-      console.log(`Disconnecting device`)
       try {
-        deviceFound.disconnect();
+        this.deviceService.disconnectDevice(deviceType, deviceId);
         res.sendStatus(200);
       } catch (error) {
         console.log(error);
@@ -130,13 +123,11 @@ class DeviceEndPoint {
     const deviceType = req.query.deviceType;
     const deviceId = req.query.deviceId;
     console.log(`Start ${deviceType} device with id: ${deviceId}`);
-    const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
-    const deviceFound = DeviceEndPoint.devices.get(deviceUniqueKey);
-    if (deviceFound !== undefined) {
+    if (this.deviceService.hasDevice(deviceType, deviceId)) {
       console.log(`Device found`);
       console.log(`Starting device`)
       try {
-        deviceFound.on();
+        this.deviceService.onDevice(deviceType, deviceId);
         res.sendStatus(200);
       } catch (error) {
         console.log(error);
@@ -151,13 +142,11 @@ class DeviceEndPoint {
     const deviceType = req.query.deviceType;
     const deviceId = req.query.deviceId;
     console.log(`Stop ${deviceType} device with id: ${deviceId}`);
-    const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
-    const deviceFound = DeviceEndPoint.devices.get(deviceUniqueKey);
-    if (deviceFound !== undefined) {
+    if (this.deviceService.hasDevice(deviceType, deviceId)) {
       console.log(`Device found`);
       console.log(`Stoping device`)
       try {
-        deviceFound.off();
+        this.deviceService.offDevice(deviceType, deviceId);
         res.sendStatus(200);
       } catch (error) {
         console.log(error);

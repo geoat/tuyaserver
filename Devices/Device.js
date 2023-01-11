@@ -57,16 +57,26 @@ class TuyaDevice extends Device {
 
     this.requestedConnectionState = DeviceConnectionState.CONNECTED;
     
+    if (this.connectionState !== DeviceConnectionState.DISCONNECTED) {
+      console.log(`Device is already connected or connection in progress`);
+      return;
+    }
+    this.connectionState = DeviceConnectionState.INPROGRESS;
+
     // Find device on network
     this.#device.find().then(() => {
+      console.log(`Found device in the network`);
       // Connect to device
-      if (this.connectionState === DeviceConnectionState.DISCONNECTED) {
-        this.connectionState = DeviceConnectionState.INPROGRESS;
+      try {
         this.#device.connect();
+      } catch(error) {
+        console.log(error);
+        this.connectionState = DeviceConnectionState.DISCONNECTED;
       }
     }).catch((error) => {
       console.log(error);
       this.connectionState = DeviceConnectionState.DISCONNECTED;
+      return;
     });
 
     // Add event listeners
@@ -77,6 +87,12 @@ class TuyaDevice extends Device {
 
     this.#device.on('disconnected', () => {
       console.log('Disconnected from device.');
+      this.connectionState = DeviceConnectionState.DISCONNECTED;
+      this.state = DeviceState.UNKNOWN;
+    });
+
+    this.#device.on('error', (error) => {
+      console.log('Error in device.', error);
       this.connectionState = DeviceConnectionState.DISCONNECTED;
       this.state = DeviceState.UNKNOWN;
     });
@@ -95,10 +111,26 @@ class TuyaDevice extends Device {
   }
 
   on() {
+    if (this.connectionState !== DeviceConnectionState.CONNECTED) {
+      console.log(`Device is not yet connected`);
+      return;
+    }
+    if (this.state === DeviceState.ON) {
+      console.log(`Device is already on, Ignoring.`);
+      return;
+    }
     this.setDefaultState(true);
   }
 
   off() {
+    if (this.connectionState !== DeviceConnectionState.CONNECTED) {
+      console.log(`Device is not yet connected`);
+      return;
+    }
+    if (this.state === DeviceState.OFF) {
+      console.log(`Device is already iff, Ignoring.`);
+      return;
+    }
     this.setDefaultState(false);
   }
 
@@ -112,26 +144,20 @@ class TuyaDevice extends Device {
   }
 
   disconnect() {
-    // Disconnect after 10 seconds
-    console.log(`Scheduling disconnect`);
-    this.requestedConnectionState = DeviceConnectionState.DISCONNECTED;
-    setTimeout(() => 
-      { 
-        new Promise(() => {
-          
-          if (this.connectionState !== DeviceConnectionState.DISCONNECTED) {
-            console.log(`Disconnecting`);
-            this.#device.disconnect();
-          } else {
-            console.log(`Already disconnected`);
-          }
-        }).then(() => {
-          this.connectionState = DeviceConnectionState.DISCONNECTED;
-          console.log(`Device disconnected`);
-        }).catch((error) => {
-          console.log(error);
-        });
-      }, 10000);
+    this.requestedConnectionState = DeviceConnectionState.DISCONNECTED; 
+     new Promise(() => {       
+       if (this.connectionState !== DeviceConnectionState.DISCONNECTED) {
+         console.log(`Disconnecting`);
+         this.#device.disconnect();
+       } else {
+         console.log(`Already disconnected`);
+       }
+     }).then(() => {
+       this.connectionState = DeviceConnectionState.DISCONNECTED;
+       console.log(`Device disconnected`);
+     }).catch((error) => {
+       console.log(error);
+     });
   }
 }
 
