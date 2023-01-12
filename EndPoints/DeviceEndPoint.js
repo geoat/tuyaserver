@@ -158,4 +158,4 @@ class DeviceEndPoint {
 
 }
 
-module.exports = { DeviceEndPoint};
+module.exports = DeviceEndPoint;
