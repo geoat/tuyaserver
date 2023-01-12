@@ -1,6 +1,6 @@
 const express = require('express');
 
-const DeviceService = require('../Services/DeviceService');
+const DeviceService = require('../services/DeviceService');
 
 class DeviceEndPoint {
   static ROOT_PATH = '/api/device';

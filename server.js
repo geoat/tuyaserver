@@ -1,8 +1,8 @@
 const express = require('express');
 const path = require('path');
-const StaticFileEndpoint = require('./EndPoints/StaticFileEndpoint');
-const TestEndPoint = require('./EndPoints/TestEndPoint');
-const DeviceEndPoint = require('./EndPoints/DeviceEndPoint');
+const StaticFileEndpoint = require('./endPoints/StaticFileEndpoint');
+const TestEndPoint = require('./endPoints/TestEndPoint');
+const DeviceEndPoint = require('./endPoints/DeviceEndPoint');
 
 const app = express();
 new StaticFileEndpoint(app)

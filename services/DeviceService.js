@@ -1,4 +1,4 @@
-const {Device, TuyaDevice} = require('../Devices/Device');
+const {Device, TuyaDevice} = require('../devices/Device');
 
 class DeviceService {
   static #singleton = new DeviceService();
