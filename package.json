@@ -4,7 +4,12 @@
   "description": "Server for controling Tuya devices in home",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run build:frontend-project && npm run copy",
+    "build:frontend-project": "cd frontend && npm run build && cd ../",
+    "copy": "rsync -av frontend/dist public",
+    "serve": "node server.js",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
