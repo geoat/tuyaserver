@@ -10,18 +10,9 @@ class DeviceConnectionState {
   }
 }
 
-class DeviceState {
-  static ON = new DeviceState("ON");
-  static OFF = new DeviceState("OFF");
-  static UNKNOWN = new DeviceState("UNKNOWN");
-
-  constructor(value) {
-    this.value = value
-  }
-}
-
 class Device {
-  state = DeviceState.UNKNOWN;
+  state = null;
+  requestedState = null
   connectionState = DeviceConnectionState.DISCONNECTED;
   requestedConnectionState = DeviceConnectionState.DISCONNECTED;
   constructor(deviceName, deviceType, deviceId, deviceKey) {
@@ -89,7 +80,7 @@ class TuyaDevice extends Device {
     this.#device.on('disconnected', () => {
       console.log('Disconnected from device.');
       this.connectionState = DeviceConnectionState.DISCONNECTED;
-      this.state = DeviceState.UNKNOWN;
+      this.state = null;
     });
 
     this.#device.on('error', (error) => {
@@ -104,9 +95,9 @@ class TuyaDevice extends Device {
       const currentState = data.dps['1'];
       console.log(`Boolean status of default property: ${currentState}.`);
       if (currentState) {
-        this.state = DeviceState.ON;
+        this.state = true;
       } else {
-        this.state = DeviceState.OFF;
+        this.state = false;
       }
     });
   }
@@ -116,10 +107,11 @@ class TuyaDevice extends Device {
       console.log(`Device is not yet connected`);
       return;
     }
-    if (this.state === DeviceState.ON) {
+    if (this.state) {
       console.log(`Device is already on, Ignoring.`);
       return;
     }
+    this.requestedState = true;
     this.setDefaultState(true);
   }
 
@@ -128,10 +120,11 @@ class TuyaDevice extends Device {
       console.log(`Device is not yet connected`);
       return;
     }
-    if (this.state === DeviceState.OFF) {
+    if (!this.state) {
       console.log(`Device is already iff, Ignoring.`);
       return;
     }
+    this.requestedState = false;
     this.setDefaultState(false);
   }
 
@@ -166,5 +159,5 @@ class TuyaDevice extends Device {
   }
 }
 
-module.exports = { DeviceConnectionState, DeviceState, Device, TuyaDevice};
+module.exports = { DeviceConnectionState, Device, TuyaDevice};
 
