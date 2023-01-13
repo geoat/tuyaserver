@@ -10,7 +10,7 @@
     <v-card class="mx-auto px-5" v-if="devices?.length > 0">
       <v-card-text>
         <v-container>
-          <v-row class="grey lighten-4 my-1" v-for="(device, i) in devices" :key="i" cols="12">
+          <v-row class="grey lighten-4 my-2" v-for="(device, i) in devices" :key="i" cols="12">
             <v-col cols="12" xs="12" sm="12" md="6" grow class="text-left">
               <v-row style="color: black">
                 <v-col cols="3" xs="3" sm="2" shrink class="text-center">
@@ -81,7 +81,7 @@
     }),
     methods: {
       isConnected(device) {
-        let connectionState = device.connectionState.value
+        let connectionState = device.connectionState
         return connectionState === 'CONNECTED'
       },
       updateDeviceState(device, value) {

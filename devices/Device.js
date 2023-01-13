@@ -1,13 +1,9 @@
 const TuyAPI = require('tuyapi');
 
 class DeviceConnectionState {
-  static CONNECTED = new DeviceConnectionState(`CONNECTED`);
-  static DISCONNECTED = new DeviceConnectionState(`DISCONNECTED`);
-  static INPROGRESS = new DeviceConnectionState(`INPROGRESS`);
-
-  constructor(value) {
-    this.value = value
-  }
+  static CONNECTED = `CONNECTED`;
+  static DISCONNECTED = `DISCONNECTED`;
+  static INPROGRESS = `INPROGRESS`;
 }
 
 class Device {
@@ -16,16 +12,27 @@ class Device {
   connectionState = DeviceConnectionState.DISCONNECTED;
   requestedConnectionState = DeviceConnectionState.DISCONNECTED;
   constructor(deviceName, deviceType, deviceId, deviceKey) {
+    if (new.target === Device) {
+      throw new TypeError("Cannot construct Database instances directly. Use the factory");
+    }
     this.deviceName = deviceName;
     this.deviceType = deviceType;
     this.deviceId = deviceId;
     this.deviceKey = deviceKey;
   }
 
-  connect() {}
-  disconnect() {}
-  on() {}
-  off() {}
+  connect() {
+    throw new Error("Abstract method called");
+  }
+  disconnect() {
+    throw new Error("Abstract method called");
+  }
+  on() {
+    throw new Error("Abstract method called");
+  }
+  off() {
+    throw new Error("Abstract method called");
+  }
 
   getUniqueKey() {
     return Device.getUniqueKey(this.deviceType, this.deviceId);
@@ -33,6 +40,23 @@ class Device {
 
   static getUniqueKey(deviceType, deviceId) {
     return deviceType + '_' + deviceId;
+  }
+
+  toJson() {
+    return JSON.stringify(this);
+  }
+  // Deserialize a JSON string to an object
+  static fromJson(json) {
+    let obj = JSON.parse(json);
+    if (obj.deviceType === 'tuya') {
+        const device = Object.assign(new TuyaDevice(), obj);
+        //reset live states
+        device.connectionState = DeviceConnectionState.DISCONNECTED;
+        device.state = null;
+      return device;
+    } else {
+      throw new TypeError("Not supported device type");
+    }
   }
 }
 
@@ -121,7 +145,7 @@ class TuyaDevice extends Device {
       return;
     }
     if (!this.state) {
-      console.log(`Device is already iff, Ignoring.`);
+      console.log(`Device is already off, Ignoring.`);
       return;
     }
     this.requestedState = false;

@@ -34,7 +34,7 @@
         }
       },
       isNotUpdated: function() {
-        return ((this.device.connectionState.value !== 'CONNECTED') ||  (this.device.state === undefined));
+        return ((this.device.connectionState !== 'CONNECTED') ||  (this.device.state === undefined));
       }
     }
   })

@@ -1,24 +1,32 @@
 const {Device, TuyaDevice} = require('../devices/Device');
+const DatabaseFactory = require('../database/DatabaseFactory');
 
 class DeviceService {
   static #singleton = new DeviceService();
   static #devices = new Map();
+  static #database
 
   static getService() {
+    DeviceService.#database = DatabaseFactory.getDatabase(`devices`);
+    const deviceArray = this.#database.readDevices();
+    for (let i = 0; i < deviceArray.length; i++) {
+      const device = deviceArray[i];
+      DeviceService.#devices.set(device.getUniqueKey(), device);
+    };
     return DeviceService.#singleton;
   }
 
   constructor() {
-
   }
 
   hasDevice(deviceType, deviceId) {
     return DeviceService.#devices.has(Device.getUniqueKey(deviceType, deviceId));
   }
 
-  addTuyaDevice(eviceName, deviceType, deviceId, deviceKey) {
-    const device = new TuyaDevice(eviceName, deviceType, deviceId, deviceKey);
+  addTuyaDevice(deviceName, deviceType, deviceId, deviceKey) {
+    const device = new TuyaDevice(deviceName, deviceType, deviceId, deviceKey);
     DeviceService.#devices.set(device.getUniqueKey(), device);
+    DeviceService.#database.storeDevices(DeviceService.#devices);
   }
 
   getDevice(deviceType, deviceId) {
