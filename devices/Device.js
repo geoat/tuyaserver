@@ -24,6 +24,10 @@ class Device {
   connect() {
     throw new Error("Abstract method called");
   }
+
+  resumeConnectedState() {
+    throw new Error("Abstract method called");
+  }
   disconnect() {
     throw new Error("Abstract method called");
   }
@@ -124,6 +128,22 @@ class TuyaDevice extends Device {
         this.state = false;
       }
     });
+  }
+
+  resumeConnectedState() {
+    try {
+      if (this.requestedConnectionState === DeviceConnectionState.CONNECTED
+        && this.connectionState !== DeviceConnectionState.CONNECTED) {
+        console.log(`Trying to re-connect device:{${this}}.`);
+        this.connect();
+      } else if (this.requestedConnectionState === DeviceConnectionState.DISCONNECTED
+        && this.connectionState !== DeviceConnectionState.DISCONNECTED) {
+          console.log(`Trying to disconnect device:{${this}}.`);
+        this.disconnect();
+      }
+    } catch (error) {
+      console.log(`Auto re-connect/disconnect of device:{${this}} failed`);
+    }
   }
 
   on() {

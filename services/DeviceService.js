@@ -13,10 +13,20 @@ class DeviceService {
       const device = deviceArray[i];
       DeviceService.#devices.set(device.getUniqueKey(), device);
     };
+    DeviceService.setRequestedState();
+    setTimeout(()=> {
+      DeviceService.setRequestedState()
+    }, 300000);
     return DeviceService.#singleton;
   }
 
   constructor() {
+  }
+
+  static setRequestedState() {
+    DeviceService.#devices.forEach(device => {
+      device.resumeConnectedState();
+    });
   }
 
   hasDevice(deviceType, deviceId) {
@@ -40,27 +50,33 @@ class DeviceService {
 
   deleteDevice(deviceType, deviceId) {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
-    return DeviceService.#devices.delete(deviceUniqueKey);
+    const result = DeviceService.#devices.delete(deviceUniqueKey);
+    DeviceService.#database.storeDevices(DeviceService.#devices);
+    return result;
   }
 
   connectDevice(deviceType, deviceId) {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
     DeviceService.#devices.get(deviceUniqueKey).connect();
+    DeviceService.#database.storeDevices(DeviceService.#devices);
   }
 
   disconnectDevice(deviceType, deviceId) {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
     DeviceService.#devices.get(deviceUniqueKey).disconnect();
+    DeviceService.#database.storeDevices(DeviceService.#devices);
   }
 
   onDevice(deviceType, deviceId) {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
     DeviceService.#devices.get(deviceUniqueKey).on();
+    DeviceService.#database.storeDevices(DeviceService.#devices);
   }
 
   offDevice(deviceType, deviceId) {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
     DeviceService.#devices.get(deviceUniqueKey).off();
+    DeviceService.#database.storeDevices(DeviceService.#devices);
   }
 }
 
