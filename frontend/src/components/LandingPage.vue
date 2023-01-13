@@ -9,52 +9,49 @@
     </v-toolbar>
     <v-card class="mx-auto px-5" v-if="devices?.length > 0">
       <v-card-text>
-        <v-list
-          subheader
-          two-line
-          color="grey lighten-4"
-          >
-          <v-list-item-group v-model="selected">
-            <v-list-item
-              v-for="(device, i) in devices"
-              :key="i"
-              :value="device"
-            >
-              <v-list-item-avatar>
-                <v-icon v-if=device.isConnected
-                  class="grey lighten-1">
-                  mdi-access-point
-                </v-icon>
-                <v-icon v-else
-                  class="grey lighten-1">
-                  mdi-access-point-remove
-                </v-icon>
-              </v-list-item-avatar>
-              <v-list-item-content>
-                <v-list-item-title class="text-h6">{{device.deviceName}}</v-list-item-title>
-                <v-list-item-subtitle v-text="device.deviceId"></v-list-item-subtitle>
-              </v-list-item-content>
-              <v-list-item-action>
-                <v-btn icon @click="connectDevice(device)">
-                  <v-icon>mdi-link</v-icon>
-                </v-btn>
-              </v-list-item-action>
-              <v-list-item-action>
-                <v-btn icon @click="disconnectDevice(device)">
-                  <v-icon>mdi-link-off</v-icon>
-                </v-btn>
-              </v-list-item-action>
-              <v-list-item-action>
-                <SwitchWithStatus :device="device" @updateDeviceState="updateDeviceState"></SwitchWithStatus>
-              </v-list-item-action>
-              <v-list-item-action>
-                <v-btn icon @click="deleteDevice(device)">
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
-              </v-list-item-action>
-            </v-list-item>
-          </v-list-item-group>
-        </v-list>
+        <v-container>
+          <v-row class="grey lighten-4 my-1" v-for="(device, i) in devices" :key="i" cols="12">
+            <v-col cols="12" xs="12" sm="12" md="6" grow class="text-left">
+              <v-row style="color: black">
+                <v-col cols="3" xs="3" sm="2" shrink class="text-center">
+                  <v-avatar size="40px" class="grey ligthen-2">
+                    <v-icon v-if=device.isConnected>
+                      mdi-access-point
+                    </v-icon>
+                    <v-icon v-else>
+                      mdi-access-point-remove
+                    </v-icon>
+                  </v-avatar>
+                </v-col>
+                <v-col xs="9" sm="10" grow>
+                  <div class="text-h6">{{device.deviceName}}<br></div>
+                  <div class="text-caption" v-text="device.deviceId"></div>
+                </v-col>
+              </v-row>
+            </v-col>
+            <v-col cols="12" xs="12" sm="12" md="6" class="text-right">
+              <v-row>
+                  <v-spacer></v-spacer>
+                  <v-col cols="auto">
+                    <v-btn icon @click="connectDevice(device)">
+                      <v-icon>mdi-link</v-icon>
+                    </v-btn>
+                    <v-btn icon @click="disconnectDevice(device)">
+                      <v-icon>mdi-link-off</v-icon>
+                    </v-btn>
+                  </v-col>
+                  <v-col cols="auto" xs="12">
+                    <SwitchWithStatus :device="device" @updateDeviceState="updateDeviceState"></SwitchWithStatus>
+                  </v-col>
+                  <v-col cols="auto" xs="12">
+                    <v-btn icon @click="deleteDevice(device)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+        </v-container>
       </v-card-text>
     </v-card>
     <AddDevice
