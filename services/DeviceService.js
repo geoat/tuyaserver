@@ -78,6 +78,12 @@ class DeviceService {
     DeviceService.#devices.get(deviceUniqueKey).off();
     DeviceService.#database.storeDevices(DeviceService.#devices);
   }
+
+  close() {
+    DeviceService.#devices.forEach(device => {
+      device.disconnect();
+    });
+  }
 }
 
 module.exports = DeviceService;

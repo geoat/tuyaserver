@@ -1,11 +1,13 @@
 const express = require('express');
 
 const DeviceService = require('../services/DeviceService');
+const EndPoint = require('./EndPoint');
 
-class DeviceEndPoint {
+class DeviceEndPoint extends EndPoint {
   static ROOT_PATH = '/api/device';
   deviceService = DeviceService.getService();
   constructor(app) {
+    super(app);
     const router = express.Router();
 
 
@@ -154,8 +156,11 @@ class DeviceEndPoint {
     } else {
       res.sendStatus(404);
     } 
-  } 
+  }
 
+  close() {
+    this.deviceService.close();
+  }
 }
 
 module.exports = DeviceEndPoint;
