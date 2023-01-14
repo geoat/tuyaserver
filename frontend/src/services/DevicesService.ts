@@ -30,5 +30,8 @@ export default {
   },
   addDevice: function(device: any) {
     return WebApi.post(`device/add?deviceName=${device.deviceName}&deviceType=${device.deviceType}&deviceId=${device.deviceId}&deviceKey=${device.deviceKey}`)
+  },
+  quit: function() {
+    return WebApi.post(`quit`);
   }
 }

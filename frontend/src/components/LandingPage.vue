@@ -1,5 +1,6 @@
 <template>
   <v-container class="mx-auto px-5">
+    <div class="text-right">Last update time: {{lastUpdateTime}}</div>
     <v-toolbar>
       <v-toolbar-title>
         <h3>Devices</h3>
@@ -77,7 +78,8 @@
     data: () => ({
       devices: null,
       selected: null,
-      interval: null
+      interval: null,
+      lastUpdateTime: 'not updated'
     }),
     methods: {
       isConnected(device) {
@@ -105,6 +107,7 @@
         })
       },
       refreshDevices() {
+        this.lastUpdateTime = this.getCurrentTime();
         DevicesService.getDevices().then(response => {
         this.devices = response.map((device) => {
           return {...device, isConnected: this.isConnected(device)}
@@ -119,6 +122,20 @@
         DevicesService.addDevice(device).then( ()=> {
           this.refreshDevices();
         })
+      },
+      getCurrentTime() {
+        let currentDate = new Date().toLocaleDateString(`en-GB`, {
+          day: '2-digit',
+          month: '2-digit',
+          year: '2-digit',
+        });
+        let currentTime = new Date().toLocaleTimeString({
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true
+        });
+        return `${currentDate} ${currentTime}`
       }
     },
     
