@@ -1,3 +1,4 @@
+const { RepeatingScheduledTask } = require("../schedule/ScheduledTask");
 const DeviceService = require("./DeviceService");
 
 class SchedulerService {
@@ -45,8 +46,15 @@ class SchedulerService {
   }
 
   getAllScheduledTasks() {
-    let jsonableObjects = [];
+    let objects = [];
     for (let [key, task] of SchedulerService.#scheduledTasks) {
+      objects.push(task);
+    }
+    
+    RepeatingScheduledTask.sort(objects);
+
+    let jsonableObjects = [];
+    for (let task of objects) {
       jsonableObjects.push(task.toJsonableObject());
     }
     return jsonableObjects;

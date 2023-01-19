@@ -115,6 +115,40 @@ class RepeatingScheduledTask extends ScheduledTask {
     }
     return objectForJson;
   }
+
+  compare(object) {
+    const thisFirstDay = this.days[0];
+    const thatFirstDay = object.days[0];
+    if (thisFirstDay !== thatFirstDay) {
+      return RepeatingScheduledTask.desiredDayValues.indexOf(thisFirstDay) - RepeatingScheduledTask.desiredDayValues.indexOf(thatFirstDay);
+    }
+    const thisTime = this.time;
+    const thatTime = object.time;
+    if (thisTime !== thatTime) {
+      const thisTimeSplits = thisTime.split(`:`);
+      const thatTimeSplits = thatTime.split(`:`);
+      const thisHour = thisTimeSplits[0];
+      const thatHour = thatTimeSplits[0];
+      if (thisHour !== thatHour) {
+        return (+thisHour) - (+thatHour)
+      }
+
+      const thisMinutes = thisTimeSplits[1];
+      const thatMinutes = thatTimeSplits[1];
+      if (thisMinutes !== thatMinutes) {
+        return (+thisMinutes) - (+thatMinutes)
+      }
+    }
+    return 0;
+  }
+
+  static compare(thisObject, thatObject) {
+    return thisObject.compare(thatObject);
+  }
+
+  static sort(array) {
+    array.sort(RepeatingScheduledTask.compare);
+  }
  
   static fromJsonObject(jsonObject) {
     if (jsonObject.days.length == 0) {
