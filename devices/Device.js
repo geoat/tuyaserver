@@ -134,7 +134,7 @@ class TuyaDevice extends Device {
     try {
       if (this.requestedConnectionState === DeviceConnectionState.CONNECTED
         && this.connectionState !== DeviceConnectionState.CONNECTED) {
-        console.log(`Trying to re-connect device:{${this}}.`);
+        console.log(`Trying to re-connect device.`);
         this.connect();
       } else if (this.requestedConnectionState === DeviceConnectionState.DISCONNECTED
         && this.connectionState !== DeviceConnectionState.DISCONNECTED) {
@@ -142,7 +142,7 @@ class TuyaDevice extends Device {
         this.disconnect();
       }
     } catch (error) {
-      console.log(`Auto re-connect/disconnect of device:{${this}} failed`);
+      console.log(`Auto re-connect/disconnect of device failed`);
     }
   }
 

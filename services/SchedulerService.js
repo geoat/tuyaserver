@@ -1,38 +1,62 @@
-class SchedulerService {
-  scheduledTasks = new Map();
+const DeviceService = require("./DeviceService");
 
-  addTask(scheduledTask) {
-    const existingScheduledTask = this.scheduledTasks.get(scheduledTask.getSchedule())
+class SchedulerService {
+  static #singleton = new SchedulerService();
+  static #scheduledTasks = new Map();
+
+  constructor() {
+    this.deviceService = DeviceService.getService();
+  }
+
+  static getService() {
+    return SchedulerService.#singleton;
+  }
+
+  addScheduledTask(scheduledTask) {
+    const existingScheduledTask = SchedulerService.#scheduledTasks.get(scheduledTask.getSchedule())
     if (existingScheduledTask) {
       existingScheduledTask.addTasks(scheduledTask.tasks);
       this.#insertScheduledTask(existingScheduledTask);
     } else {
       this.#insertScheduledTask(scheduledTask);
-    }    
+      scheduledTask.schedule();
+    }
     return true;
   }
 
   #insertScheduledTask(scheduledTask) {
-    this.scheduledTasks.set(scheduledTask.getSchedule(), scheduledTask);
+    SchedulerService.#scheduledTasks.set(scheduledTask.getSchedule(), scheduledTask);
   }
 
-  removeTask(scheduledTask) {
-    const existingScheduledTask = this.scheduledTasks.get(scheduledTask.getSchedule())
+  removeScheduledTask(scheduledTask) {
+    const existingScheduledTask = SchedulerService.#scheduledTasks.get(scheduledTask.getSchedule())
     if (existingScheduledTask) {
       existingScheduledTask.removeTasks(scheduledTask.tasks);
-      if (existingScheduledTask.tasks.length <= 0) {
-        this.#removeScheduledTask(existingScheduledTask);
+      if ((existingScheduledTask.tasks.size <= 0) || (scheduledTask.tasks.size == 0 )) {
+        this.#deleteScheduledTask(existingScheduledTask);
+        existingScheduledTask.destroy();
       }
     }   
     return true;
-  }  
+  }
   
-  #removeScheduledTask(scheduledTask) {
-    this.scheduledTasks.remove(scheduledTask.getSchedule());
+  #deleteScheduledTask(scheduledTask) {
+    SchedulerService.#scheduledTasks.delete(scheduledTask.getSchedule());
   }
 
-  getAllTasks() {
-    return [...this.scheduledTasks.values()];
+  getAllScheduledTasks() {
+    let jsonableObjects = [];
+    for (let [key, task] of SchedulerService.#scheduledTasks) {
+      jsonableObjects.push(task.toJsonableObject());
+    }
+    return jsonableObjects;
+  }
+
+  close() {
+    console.log(`Clearing scheduled tasks`);
+    SchedulerService.#scheduledTasks.forEach(task => {
+      task.destroy();
+    });
   }
 }
 

@@ -9,9 +9,7 @@ class DeviceEndPoint extends EndPoint {
   constructor(app) {
     super(app);
     const router = express.Router();
-
-
-    router.get(`/test`, this.test.bind(this));
+    
     router.post(`/add`, this.addDevice.bind(this));
     router.get(`/get`, this.getDevice.bind(this));  
     router.get(`/getAll`, this.getAllDevices.bind(this));
@@ -22,13 +20,6 @@ class DeviceEndPoint extends EndPoint {
     router.post(`/off`, this.off.bind(this));
 
     app.use(DeviceEndPoint.ROOT_PATH, router);
-  }
-
-  test(req, res) {
-	  console.log('get on test recived');
-	  const string1 = req.query.string1;
-    console.log(`String:  ${string1}`);
-    res.send(`testing`);
   }
 
   addDevice(req, res) {

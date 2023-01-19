@@ -2,21 +2,24 @@ const {Device, TuyaDevice} = require('../devices/Device');
 const DatabaseFactory = require('../database/DatabaseFactory');
 
 class DeviceService {
-  static #singleton = new DeviceService();
+  static #singleton = undefined;
   static #devices = new Map();
   static #database
 
   static getService() {
-    DeviceService.#database = DatabaseFactory.getDatabase(`devices`);
-    const deviceArray = this.#database.readDevices();
-    for (let i = 0; i < deviceArray.length; i++) {
-      const device = deviceArray[i];
-      DeviceService.#devices.set(device.getUniqueKey(), device);
-    };
-    DeviceService.setRequestedState();
-    setTimeout(()=> {
-      DeviceService.setRequestedState()
-    }, 300000);
+    if (DeviceService.#singleton === undefined) {
+      DeviceService.#database = DatabaseFactory.getDatabase(`devices`);
+      const deviceArray = this.#database.readDevices();
+      for (let i = 0; i < deviceArray.length; i++) {
+        const device = deviceArray[i];
+        DeviceService.#devices.set(device.getUniqueKey(), device);
+      };
+      DeviceService.setRequestedState();
+      setTimeout(()=> {
+        DeviceService.setRequestedState()
+      }, 300000);
+      DeviceService.#singleton = new DeviceService();
+    }
     return DeviceService.#singleton;
   }
 
@@ -80,6 +83,7 @@ class DeviceService {
   }
 
   close() {
+    console.log(`Disconnecting connected devices`);
     DeviceService.#devices.forEach(device => {
       device.disconnect();
     });
