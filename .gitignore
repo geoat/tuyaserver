@@ -2,3 +2,4 @@
 *FileDatabase/
 *devices.json
 *tasks.json
+/dist
