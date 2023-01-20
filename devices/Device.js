@@ -46,6 +46,11 @@ class Device {
     return deviceType + '_' + deviceId;
   }
 
+  toJsonableObject() {
+    return this;
+  }
+
+
   toJson() {
     return JSON.stringify(this);
   }

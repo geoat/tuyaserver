@@ -1,5 +1,6 @@
 const {Device, TuyaDevice} = require('../devices/Device');
 const DatabaseFactory = require('../database/DatabaseFactory');
+const DeviceJsonSerializerUtil = require('../database/utils/DevicesJsonSerializationUtil');
 
 class DeviceService {
   static #singleton = undefined;
@@ -8,8 +9,8 @@ class DeviceService {
 
   static getService() {
     if (DeviceService.#singleton === undefined) {
-      DeviceService.#database = DatabaseFactory.getDatabase(`devices`);
-      const deviceArray = this.#database.readDevices();
+      DeviceService.#database = DatabaseFactory.getDatabase(`devices`, new DeviceJsonSerializerUtil());
+      const deviceArray = this.#database.read();
       for (let i = 0; i < deviceArray.length; i++) {
         const device = deviceArray[i];
         DeviceService.#devices.set(device.getUniqueKey(), device);
@@ -39,7 +40,7 @@ class DeviceService {
   addTuyaDevice(deviceName, deviceType, deviceId, deviceKey) {
     const device = new TuyaDevice(deviceName, deviceType, deviceId, deviceKey);
     DeviceService.#devices.set(device.getUniqueKey(), device);
-    DeviceService.#database.storeDevices(DeviceService.#devices);
+    DeviceService.#database.store(DeviceService.#devices);
   }
 
   getDevice(deviceType, deviceId) {
@@ -54,32 +55,32 @@ class DeviceService {
   deleteDevice(deviceType, deviceId) {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
     const result = DeviceService.#devices.delete(deviceUniqueKey);
-    DeviceService.#database.storeDevices(DeviceService.#devices);
+    DeviceService.#database.store(DeviceService.#devices);
     return result;
   }
 
   connectDevice(deviceType, deviceId) {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
     DeviceService.#devices.get(deviceUniqueKey).connect();
-    DeviceService.#database.storeDevices(DeviceService.#devices);
+    DeviceService.#database.store(DeviceService.#devices);
   }
 
   disconnectDevice(deviceType, deviceId) {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
     DeviceService.#devices.get(deviceUniqueKey).disconnect();
-    DeviceService.#database.storeDevices(DeviceService.#devices);
+    DeviceService.#database.store(DeviceService.#devices);
   }
 
   onDevice(deviceType, deviceId) {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
     DeviceService.#devices.get(deviceUniqueKey).on();
-    DeviceService.#database.storeDevices(DeviceService.#devices);
+    DeviceService.#database.store(DeviceService.#devices);
   }
 
   offDevice(deviceType, deviceId) {
     const deviceUniqueKey = Device.getUniqueKey(deviceType, deviceId);
     DeviceService.#devices.get(deviceUniqueKey).off();
-    DeviceService.#database.storeDevices(DeviceService.#devices);
+    DeviceService.#database.store(DeviceService.#devices);
   }
 
   close() {

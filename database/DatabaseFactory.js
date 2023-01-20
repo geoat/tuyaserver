@@ -3,8 +3,8 @@ const FlatFileDatabase = require('./FlatFileDatabase')
 
 class DatabaseFactory {
 
-  static getDatabase(databaseName) {
-    return new FlatFileDatabase(databaseName);
+  static getDatabase(databaseName, serializerUtil) {
+    return new FlatFileDatabase(databaseName, serializerUtil);
   }
 
 }

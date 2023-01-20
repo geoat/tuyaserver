@@ -1,2 +1,4 @@
 /node_modules/
+*FileDatabase/
 *devices.json
+*tasks.json

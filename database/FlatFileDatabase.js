@@ -3,23 +3,30 @@ const DevicesJsonSerializationUtil = require('./utils/DevicesJsonSerializationUt
 const fs = require('fs')
 
 class FlatFileDatabase extends Database {
-  
-  constructor(databaseName) {
-    super(databaseName);
+  static DATABASE_DIR="FileDatabase/";
+  constructor(databaseName, serializerUtil) {
+    super(databaseName, serializerUtil);
+    const fileExists = fs.existsSync(this.getDatabaseFile());
+    if (!fileExists) {
+      if(!fs.existsSync(FlatFileDatabase.DATABASE_DIR)) {
+        fs.mkdirSync(FlatFileDatabase.DATABASE_DIR);
+      }
+      fs.writeFileSync(this.getDatabaseFile(), JSON.stringify([]))
+    }
   }
 
-  storeDevices(devices) {
-    fs.writeFileSync(this.getDatabaseFile(), DevicesJsonSerializationUtil.serializeDevices([...devices.values()]));
+  store(objectsMap) {
+    fs.writeFileSync(this.getDatabaseFile(), this.serializerUtil.serialize([...objectsMap.values()]));
   }
 
-  readDevices() {
+  read() {
     let json = fs.readFileSync(this.getDatabaseFile(), 'utf8').replace(/\\/g, "");
-    let deviceArray = DevicesJsonSerializationUtil.deserializeDevices(json);
+    let deviceArray = this.serializerUtil.deserialize(json);
     return deviceArray;
   }
 
   getDatabaseFile() {
-    return this.databaseName + '.json';
+    return FlatFileDatabase.DATABASE_DIR + this.databaseName + '.json';
   }
 }
 

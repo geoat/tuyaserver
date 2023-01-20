@@ -195,6 +195,34 @@ class RepeatingScheduledTask extends ScheduledTask {
     }
     return Object.assign(new RepeatingScheduledTask(), jsonObject);
   }
+
+  toJsonableObject() {
+    let objectForJson = Object.assign({}, this);
+    objectForJson.tasks = [];
+    for(let [key, task] of this.tasks) {
+      objectForJson.tasks.push(task);
+    }
+    return objectForJson;
+  }
+
+  toJson() {
+    return JSON.stringify(this.toJsonableObject());
+  }
+
+
+  // Deserialize a JSON string to an object
+  static fromJson(json) {
+    let obj = JSON.parse(json);
+
+    const deviceTasks = obj.tasks;
+    obj.tasks = new Map();
+    const scheduledTask = Object.assign(new RepeatingScheduledTask(), obj);
+    for(let deviceTaskObject of deviceTasks) {
+      const deviceTask = Object.assign(new Task(), deviceTaskObject);
+      scheduledTask.addTask(deviceTask);
+    }
+    return scheduledTask;
+  }
 }
 
 module.exports = {ScheduledTask, ExactDateTimeScheduledTask, RepeatingScheduledTask};

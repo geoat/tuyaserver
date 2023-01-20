@@ -1,8 +1,11 @@
+const DatabaseFactory = require("../database/DatabaseFactory");
+const TasksJsonSerializationUtil = require("../database/utils/TasksJsonSerializationUtil");
 const { RepeatingScheduledTask } = require("../schedule/ScheduledTask");
 const DeviceService = require("./DeviceService");
 
 class SchedulerService {
-  static #singleton = new SchedulerService();
+  static #singleton = undefined;
+  static #database = undefined;
   static #scheduledTasks = new Map();
 
   constructor() {
@@ -10,6 +13,14 @@ class SchedulerService {
   }
 
   static getService() {
+    if (SchedulerService.#singleton ===  undefined){
+      SchedulerService.#singleton = new SchedulerService();
+      SchedulerService.#database = DatabaseFactory.getDatabase(`tasks`, new TasksJsonSerializationUtil());
+      const taskArray = SchedulerService.#database.read();
+      for (let task of taskArray) {
+        SchedulerService.#singleton.#insertScheduledTask(task);
+      };
+    }
     return SchedulerService.#singleton;
   }
 
@@ -22,6 +33,7 @@ class SchedulerService {
       this.#insertScheduledTask(scheduledTask);
       scheduledTask.schedule();
     }
+    SchedulerService.#database.store(SchedulerService.#scheduledTasks);
     return true;
   }
 
@@ -37,6 +49,7 @@ class SchedulerService {
         this.#deleteScheduledTask(existingScheduledTask);
         existingScheduledTask.destroy();
       }
+      SchedulerService.#database.store(SchedulerService.#scheduledTasks);
     }   
     return true;
   }
@@ -50,7 +63,7 @@ class SchedulerService {
     for (let [key, task] of SchedulerService.#scheduledTasks) {
       objects.push(task);
     }
-    
+
     RepeatingScheduledTask.sort(objects);
 
     let jsonableObjects = [];
