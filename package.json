@@ -29,7 +29,7 @@
     "http": "^0.0.1-security",
     "node-cron": "^3.0.2",
     "path": "^0.12.7",
-    "tuyapi": "github:codetheweb/tuyapi",
+    "tuyapi": "^7.5.1",
     "url": "^0.11.0"
   }
 }
