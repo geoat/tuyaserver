@@ -4,12 +4,16 @@
   "description": "Server for controling Tuya devices in home",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run build:frontend-project && npm run copy",
+    "serve": "node src/server.js",
+    "start": "node src/server.js",
+    "build": "npm run install:frontend-project-dependencies && npm run build:frontend-project && npm run copyFrontendDist && npm run buildserver",
+    "install:frontend-project-dependencies": "cd frontend && npm i && cd ../",
     "build:frontend-project": "cd frontend && npm run build && cd ../",
-    "copy": "rsync -av frontend/dist/ public/",
-    "serve": "node server.js",
-    "start": "node server.js"
+    "copyFrontendDist": "rsync -av frontend/dist/ src/public/",
+    "buildserver": "babel src -d dist && npm run copyPublicToFinalDist",
+    "serveDist": "node dist/server.js",
+    "startDist": "node dist/server.js",
+    "copyPublicToFinalDist": "rsync -av src/public/ dist/public/"
   },
   "repository": {
     "type": "git",
@@ -29,7 +33,13 @@
     "http": "^0.0.1-security",
     "node-cron": "^3.0.2",
     "path": "^0.12.7",
-    "tuyapi": "github:codetheweb/tuyapi",
+    "tuyapi": "^7.5.1",
     "url": "^0.11.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.20.7",
+    "@babel/core": "^7.20.12",
+    "@babel/preset-env": "^7.20.2",
+    "babel-loader": "^9.1.2"
   }
 }
