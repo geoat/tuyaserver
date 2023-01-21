@@ -34,7 +34,7 @@ export default Vue.extend({
   },
   methods: {
       quit: function() {
-        if (confirm("Are you sure you want to quit the server.?")) {
+        if (confirm("Are you sure you want to quit the server?")) {
           DevicesService.quit().finally(() => {
             console.log('Destroying')
             this.$destroy();

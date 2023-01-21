@@ -1,6 +1,6 @@
 const DatabaseFactory = require("../database/DatabaseFactory");
 const TasksJsonSerializationUtil = require("../database/utils/TasksJsonSerializationUtil");
-const { RepeatingScheduledTask } = require("../schedule/ScheduledTask");
+const {ScheduledTask } = require("../schedule/ScheduledTask");
 const DeviceService = require("./DeviceService");
 
 class SchedulerService {
@@ -25,7 +25,7 @@ class SchedulerService {
   }
 
   addScheduledTask(scheduledTask) {
-    const existingScheduledTask = SchedulerService.#scheduledTasks.get(scheduledTask.getSchedule())
+    const existingScheduledTask = SchedulerService.#scheduledTasks.get(scheduledTask.getSchedule().toString())
     if (existingScheduledTask) {
       existingScheduledTask.addTasks(scheduledTask.tasks);
       this.#insertScheduledTask(existingScheduledTask);
@@ -38,11 +38,11 @@ class SchedulerService {
   }
 
   #insertScheduledTask(scheduledTask) {
-    SchedulerService.#scheduledTasks.set(scheduledTask.getSchedule(), scheduledTask);
+    SchedulerService.#scheduledTasks.set(scheduledTask.getSchedule().toString(), scheduledTask);
   }
 
   removeScheduledTask(scheduledTask) {
-    const existingScheduledTask = SchedulerService.#scheduledTasks.get(scheduledTask.getSchedule())
+    const existingScheduledTask = SchedulerService.#scheduledTasks.get(scheduledTask.getSchedule().toString())
     if (existingScheduledTask) {
       existingScheduledTask.removeTasks(scheduledTask.tasks);
       if ((existingScheduledTask.tasks.size <= 0) || (scheduledTask.tasks.size == 0 )) {
@@ -55,7 +55,7 @@ class SchedulerService {
   }
   
   #deleteScheduledTask(scheduledTask) {
-    SchedulerService.#scheduledTasks.delete(scheduledTask.getSchedule());
+    SchedulerService.#scheduledTasks.delete(scheduledTask.getSchedule().toString());
   }
 
   getAllScheduledTasks() {
@@ -64,10 +64,10 @@ class SchedulerService {
       objects.push(task);
     }
 
-    RepeatingScheduledTask.sort(objects);
+    const sortedObjects = ScheduledTask.sort(objects);
 
     let jsonableObjects = [];
-    for (let task of objects) {
+    for (let task of sortedObjects) {
       jsonableObjects.push(task.toJsonableObject());
     }
     return jsonableObjects;

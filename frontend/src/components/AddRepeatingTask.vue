@@ -85,7 +85,7 @@
   import Vue from 'vue'
 
   export default Vue.extend({
-    name: 'AddTask',
+    name: 'AddRepeatingTask',
     props: {
       devices: []
     },
@@ -129,7 +129,7 @@
         })
       },
       isNonEmptyString(string) {
-        return string !==''
+        return !!string;
       },
       isNonEmptySelection(value) {
         return (value !== null) && (value !== undefined)

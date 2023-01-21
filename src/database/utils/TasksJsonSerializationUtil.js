@@ -1,5 +1,4 @@
-const { Device } = require('../../devices/Device');
-const { RepeatingScheduledTask } = require('../../schedule/ScheduledTask');
+const { ScheduledTask } = require('../../schedule/ScheduledTask');
 const SerializerUtil = require('./SerializerUtil');
 
 class TasksJsonSerializationUtil extends SerializerUtil{
@@ -20,7 +19,7 @@ class TasksJsonSerializationUtil extends SerializerUtil{
     let deviceArray = JSON.parse(json);
 
     for (let i = 0; i < deviceArray.length; i++) {
-      deviceArray[i] = RepeatingScheduledTask.fromJson(JSON.stringify(deviceArray[i]));
+      deviceArray[i] = ScheduledTask.fromJsonObject(deviceArray[i]);
     }
     return deviceArray;
   }

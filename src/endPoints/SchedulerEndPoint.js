@@ -1,5 +1,5 @@
 const express = require('express');
-const { RepeatingScheduledTask } = require('../schedule/ScheduledTask');
+const { ScheduledTask } = require('../schedule/ScheduledTask');
 const SchedulerService = require('../services/SchedulerService');
 const EndPoint = require('./EndPoint');
 
@@ -21,7 +21,13 @@ class SchedulerEndPoint extends EndPoint{
 
   addScheduledTask(req, res) {
     try {
-      const scheduledTask = RepeatingScheduledTask.fromJsonObject(req.body);
+      const scheduledTask = ScheduledTask.fromJsonObject(req.body);
+      if (scheduledTask.date) {
+        if (scheduledTask.getSchedule() <= new Date()) {
+          res.sendStatus(403);
+          return;
+        }
+      }
       this.schedulerService.addScheduledTask(scheduledTask);
     } catch(error) {
       console.log(error);
@@ -37,7 +43,7 @@ class SchedulerEndPoint extends EndPoint{
 
   deleteScheduledTask(req, res) {
     try{
-      const scheduledTask = RepeatingScheduledTask.fromJsonObject(req.body);
+      const scheduledTask = ScheduledTask.fromJsonObject(req.body);
       this.schedulerService.removeScheduledTask(scheduledTask);
     } catch(error) {
       console.log(error);

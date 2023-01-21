@@ -1,17 +1,24 @@
 import WebApi from '../common/WebApi'
-import {RepeatingScheduledTask, Task} from '../models/ScheduledTask'
+import {ExactDateTimeScheduledTask, RepeatingScheduledTask, Task} from '../models/ScheduledTask'
 
 export default {
   addScheduledTask: function (task: any) {
-    const repeatingScheduledTask = new RepeatingScheduledTask();
-    repeatingScheduledTask.time = task.time;
-    repeatingScheduledTask.days = task.days;
+    let scheduledTask = null;
+    if (task.days)  {
+      scheduledTask = new RepeatingScheduledTask();
+      scheduledTask.days = task.days;
+    } else {
+      scheduledTask = new ExactDateTimeScheduledTask();
+      scheduledTask.date = task.date;
+    }
+    scheduledTask.time = task.time;
+
     const deviceTask = new Task();
     deviceTask.deviceType=task.device.deviceType;
     deviceTask.deviceId=task.device.deviceId;
     deviceTask.state = task.state;
-    repeatingScheduledTask.tasks.push(deviceTask);
-    return WebApi.post('schedule/addTask', repeatingScheduledTask).then((response: any) => {
+    scheduledTask.tasks.push(deviceTask);
+    return WebApi.post('schedule/addTask', scheduledTask).then((response: any) => {
       return response
     }).catch(function () {
     })
@@ -22,12 +29,18 @@ export default {
     }).catch(function () {
     })
   },
-  deleteScheduledTask: function(days: [], time: string) {
-    const schedule = {
-      days: days,
-      time: time
+  deleteScheduledTask: function(task: any) {
+    let scheduledTask = null;
+    if (task.days)  {  
+      scheduledTask = new RepeatingScheduledTask();
+      scheduledTask.days = task.days;
+    } else {
+      scheduledTask = new ExactDateTimeScheduledTask();
+      scheduledTask.date = task.date;
     }
-    return WebApi.post('schedule/delete', schedule).then((response: any) => {
+    scheduledTask.time = task.time;
+    
+    return WebApi.post('schedule/delete', scheduledTask).then((response: any) => {
       return response
     }).catch(function () {
     })

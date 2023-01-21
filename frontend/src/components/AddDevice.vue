@@ -97,7 +97,7 @@
         })
       },
       isNonEmptyString(string) {
-        return string !==''
+        return !!string;
       },
       save() {
         if (this.$refs.form.validate()) {

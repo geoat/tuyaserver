@@ -1,4 +1,5 @@
 const cron = require('node-cron');
+const moment = require('moment');
 const { Device } = require("../devices/Device");
 const DeviceService = require('../services/DeviceService');
 
@@ -14,31 +15,19 @@ class Task {
 
 class ScheduledTask {
   tasks = new Map();
-  #deviceService = null;
-  #taskCron = null;
+  deviceService = null;
 
   constructor() {
-    this.#deviceService = DeviceService.getService();
+    this.deviceService = DeviceService.getService();
+    if (new.target === ScheduledTask) {
+      throw new TypeError("Cannot construct Database instances directly. Use the factory");
+    }
   }
 
   schedule() {
-    this.#taskCron = cron.schedule(this.getSchedule(), () => {
-      const tasks = this.getTasks().values();
-      for (let task of tasks){
-        if(task.state) {
-          this.#deviceService.onDevice(task.deviceType, task.deviceId);
-        } else {
-          this.#deviceService.offDevice(task.deviceType, task.deviceId);
-        }
-      }
-    });
   }
 
   destroy() {
-    if(this.#taskCron !== undefined) {
-      this.#taskCron.stop();
-      this.#taskCron = undefined
-    }
   }
 
   getSchedule() {
@@ -71,42 +60,6 @@ class ScheduledTask {
     this.tasks.remove(uniqueKey);
   }
 
-  toJson() {
-    
-  }
-}
-
-class ExactDateTimeScheduledTask extends ScheduledTask {
-  date = `22/12/2023`;
-  time = `14:12`;
-
-  constructor() {
-    super();
-  }
-
-  getSchedule() {
-    const dateParts = this.date.split("/");
-    const timeParts = this.time.split(`:`);
-    const dateTime = new Date(dateParts[2], dateParts[1]-1, dateParts[0], +timeParts[0], +timeParts[1]);
-    return dateTime;
-  }
-}
-
-
-class RepeatingScheduledTask extends ScheduledTask {
-  static desiredDayValues = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  days = [];
-  time = `00:00`;
-
-  constructor() {
-    super();
-  }
-
-  getSchedule() {
-    const timeParts = this.time.split(`:`);
-    return `${+timeParts[1]} ${+timeParts[0]} * * ${(this.days.length>0)?this.days.join(`,`):`*`}`;
-  }
-
   toJsonableObject() {
     let objectForJson = Object.assign({}, this);
     objectForJson.tasks = [];
@@ -116,41 +69,178 @@ class RepeatingScheduledTask extends ScheduledTask {
     return objectForJson;
   }
 
-  compare(object) {
-    const thisFirstDay = this.days[0];
-    const thatFirstDay = object.days[0];
-    if (thisFirstDay !== thatFirstDay) {
-      return RepeatingScheduledTask.desiredDayValues.indexOf(thisFirstDay) - RepeatingScheduledTask.desiredDayValues.indexOf(thatFirstDay);
-    }
-    const thisTime = this.time;
-    const thatTime = object.time;
-    if (thisTime !== thatTime) {
-      const thisTimeSplits = thisTime.split(`:`);
-      const thatTimeSplits = thatTime.split(`:`);
-      const thisHour = thisTimeSplits[0];
-      const thatHour = thatTimeSplits[0];
-      if (thisHour !== thatHour) {
-        return (+thisHour) - (+thatHour)
-      }
+  toJson() {
+    return JSON.stringify(this.toJsonableObject());
+  }
 
-      const thisMinutes = thisTimeSplits[1];
-      const thatMinutes = thatTimeSplits[1];
-      if (thisMinutes !== thatMinutes) {
-        return (+thisMinutes) - (+thatMinutes)
+  static fromJsonObject(jsonObject) {
+    if (jsonObject.days !== undefined) {
+      return RepeatingScheduledTask.fromJsonObject(jsonObject);
+    } else if (jsonObject.date !== undefined) {
+      return ExactDateTimeScheduledTask.fromJsonObject(jsonObject);
+    } else {
+      throw new Error(`Unknown type of object`);
+    }
+  }
+
+  compareScheduledTasks(object) {
+    if (((this instanceof RepeatingScheduledTask ) && (object instanceof RepeatingScheduledTask)) 
+    || ((this instanceof ExactDateTimeScheduledTask ) && (object instanceof ExactDateTimeScheduledTask))) {
+      return this.compare(object);
+    } else if(this instanceof RepeatingScheduledTask) {
+      return -1;
+    } else {
+      return 1;
+    }
+  }
+
+  static compare(thisObject, thatObject) {
+    return thisObject.compareScheduledTasks(thatObject);
+  }
+
+  static sort(array) {
+    array = array.sort(ScheduledTask.compare);
+    return array;
+  }
+}
+
+class ExactDateTimeScheduledTask extends ScheduledTask {
+  #timeoutHandle = null;
+  date = `22/12/2023`;
+  time = `14:12`;
+
+  constructor() {
+    super();
+  }
+
+  schedule() {
+    const currentTime = new Date();
+    const timeUntilExecution = this.getSchedule() - currentTime;
+    this.#timeoutHandle = setTimeout(() => {
+      const tasks = this.getTasks().values();
+      for (let task of tasks){
+        if(task.state) {
+          this.deviceService.onDevice(task.deviceType, task.deviceId);
+        } else {
+          this.deviceService.offDevice(task.deviceType, task.deviceId);
+        }
       }
+    }, timeUntilExecution);
+  }
+
+  destroy() {
+    if(this.#timeoutHandle != null) {
+      clearTimeout(this.#timeoutHandle);
+      this.#timeoutHandle = null;
+    }
+  }
+
+  getSchedule() {
+    const date = moment(`${this.date} ${this.time}`, "DD/MM/YYYY HH:mm").toDate();
+    return date;
+  }
+
+  compare(object) {
+    const thisTime = this.getSchedule().getTime();
+    const thatTime = object.getSchedule().getTime();
+
+    if (thisTime != thatTime) {
+        return (+thisTime) - (+thatTime)
     }
     return 0;
   }
 
-  static compare(thisObject, thatObject) {
-    return thisObject.compare(thatObject);
+  static fromJsonObject(jsonObject) {
+    if (jsonObject.date === undefined) {
+      throw new Error(`Date is not provided.`);
+    }
+
+    if (jsonObject.date.length == 0) {
+      throw new Error(`The date provided is empty.`);
+    }
+    
+    const dateMoment = moment(jsonObject.date, "DD/MM/YYYY");
+    if (!dateMoment.isValid()) {
+      throw new Error(`The date format is wrong. It should be DD/mm/yyyy`);
+    }
+
+    if (jsonObject.time === undefined) {
+      throw new Error(`Time is not provided.`);
+    }
+
+    const timeMoment = moment(jsonObject.time, "HH:mm");
+    if (!timeMoment.isValid()) {
+      throw new Error(`The time format is wrong. It should be HH:mm`);
+    }
+
+    const tasks = jsonObject.tasks;
+    if (tasks != undefined) {
+      jsonObject.tasks = new Map();
+      for(let i = 0; i < tasks.length; i++) {
+        const convertedTask = Task.fromJsonObject(tasks[i]);
+        const uniqueKey = Device.getUniqueKey(convertedTask.deviceType, convertedTask.deviceId);
+        jsonObject.tasks.set(uniqueKey, convertedTask);
+      }
+    }
+    return Object.assign(new ExactDateTimeScheduledTask(), jsonObject);
+  }
+}
+
+
+class RepeatingScheduledTask extends ScheduledTask {
+  #taskCron = null;
+  static desiredDayValues = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  days = [];
+  time = `00:00`;
+
+  constructor() {
+    super();
   }
 
-  static sort(array) {
-    array.sort(RepeatingScheduledTask.compare);
+  schedule() {
+    this.#taskCron = cron.schedule(this.getSchedule(), () => {
+      const tasks = this.getTasks().values();
+      for (let task of tasks){
+        if(task.state) {
+          this.deviceService.onDevice(task.deviceType, task.deviceId);
+        } else {
+          this.deviceService.offDevice(task.deviceType, task.deviceId);
+        }
+      }
+    });
+  }
+
+  destroy() {
+    if(this.#taskCron != null) {
+      this.#taskCron.stop();
+      this.#taskCron = undefined
+    }
+  }
+
+  getSchedule() {
+    const timeParts = this.time.split(`:`);
+    return `${+timeParts[1]} ${+timeParts[0]} * * ${(this.days.length>0)?this.days.join(`,`):`*`}`;
+  }
+
+  compare(object) {
+    const thisFirstDay = this.days[0];
+    const thatFirstDay = object.days[0];
+    if (thisFirstDay !== thatFirstDay) {
+      return Math.sign((RepeatingScheduledTask.desiredDayValues.indexOf(thisFirstDay) - RepeatingScheduledTask.desiredDayValues.indexOf(thatFirstDay)));
+    }
+    const thisTime = moment(this.time, "HH:mm");
+    const thatTime = moment(object.time, "HH:mm");
+    if (thisTime !== thatTime) {
+      return Math.sign(thisTime.diff(thatTime, 'minutes'));
+    }
+    return 0;
   }
  
   static fromJsonObject(jsonObject) {
+    if (jsonObject.days === undefined) {
+      throw new Error(`Days are not provided.`);
+    }
+
     if (jsonObject.days.length == 0) {
       throw new Error(`There are no valid days`);
     }
@@ -171,17 +261,13 @@ class RepeatingScheduledTask extends ScheduledTask {
       }
     }
 
-    const timeSplits = jsonObject.time.split(":");
-    if (timeSplits.length != 2) {
-      throw new Error(`The time format is not proper. It should be HH:mm`);
+    if (jsonObject.time === undefined) {
+      throw new Error(`Time is not provided.`);
     }
 
-    if ((+timeSplits[0]) > 23) {
-      throw new Error(`The hours should be less than or equal to 23`);
-    }
-
-    if ((+timeSplits[1]) > 59) {
-      throw new Error(`The minutes should be less than or ewual to 59`);
+    const timeMoment = moment(jsonObject.time, "HH:mm");
+    if (!timeMoment.isValid()) {
+      throw new Error(`The time format is wrong. It should be HH:mm`);
     }
 
     const tasks = jsonObject.tasks;
@@ -194,34 +280,6 @@ class RepeatingScheduledTask extends ScheduledTask {
       }
     }
     return Object.assign(new RepeatingScheduledTask(), jsonObject);
-  }
-
-  toJsonableObject() {
-    let objectForJson = Object.assign({}, this);
-    objectForJson.tasks = [];
-    for(let [key, task] of this.tasks) {
-      objectForJson.tasks.push(task);
-    }
-    return objectForJson;
-  }
-
-  toJson() {
-    return JSON.stringify(this.toJsonableObject());
-  }
-
-
-  // Deserialize a JSON string to an object
-  static fromJson(json) {
-    let obj = JSON.parse(json);
-
-    const deviceTasks = obj.tasks;
-    obj.tasks = new Map();
-    const scheduledTask = Object.assign(new RepeatingScheduledTask(), obj);
-    for(let deviceTaskObject of deviceTasks) {
-      const deviceTask = Object.assign(new Task(), deviceTaskObject);
-      scheduledTask.addTask(deviceTask);
-    }
-    return scheduledTask;
   }
 }
 
