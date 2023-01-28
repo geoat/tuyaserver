@@ -19,6 +19,7 @@ class SchedulerService {
       const taskArray = SchedulerService.#database.read();
       for (let task of taskArray) {
         SchedulerService.#singleton.#insertScheduledTask(task);
+        task.schedule();
       };
     }
     return SchedulerService.#singleton;

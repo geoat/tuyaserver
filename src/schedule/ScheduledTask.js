@@ -15,18 +15,21 @@ class Task {
 
 class ScheduledTask {
   tasks = new Map();
-  deviceService = null;
+  #deviceService = null;
 
   constructor() {
-    this.deviceService = DeviceService.getService();
+    this.#deviceService = DeviceService.getService();
     if (new.target === ScheduledTask) {
-      throw new TypeError("Cannot construct Database instances directly. Use the factory");
+      throw new TypeError("Cannot construct task instances directly");
     }
   }
 
   schedule() {
   }
 
+  getDeviceService() {
+    return this.#deviceService;
+  }
   destroy() {
   }
 
@@ -115,14 +118,18 @@ class ExactDateTimeScheduledTask extends ScheduledTask {
 
   schedule() {
     const currentTime = new Date();
-    const timeUntilExecution = this.getSchedule() - currentTime;
+    const scheduledTime = this.getSchedule();
+    if (scheduledTime <= currentTime) {
+      return;
+    }
+    const timeUntilExecution = scheduledTime - currentTime;
     this.#timeoutHandle = setTimeout(() => {
       const tasks = this.getTasks().values();
       for (let task of tasks){
         if(task.state) {
-          this.deviceService.onDevice(task.deviceType, task.deviceId);
+          this.getDeviceService().onDevice(task.deviceType, task.deviceId);
         } else {
-          this.deviceService.offDevice(task.deviceType, task.deviceId);
+          this.getDeviceService().offDevice(task.deviceType, task.deviceId);
         }
       }
     }, timeUntilExecution);
@@ -202,9 +209,9 @@ class RepeatingScheduledTask extends ScheduledTask {
       const tasks = this.getTasks().values();
       for (let task of tasks){
         if(task.state) {
-          this.deviceService.onDevice(task.deviceType, task.deviceId);
+          this.getDeviceService().onDevice(task.deviceType, task.deviceId);
         } else {
-          this.deviceService.offDevice(task.deviceType, task.deviceId);
+          this.getDeviceService().offDevice(task.deviceType, task.deviceId);
         }
       }
     });
